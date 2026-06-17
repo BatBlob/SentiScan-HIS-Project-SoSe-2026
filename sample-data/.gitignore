@@ -1,0 +1,5 @@
+# Sample datasets in this folder are tracked intentionally.
+# Ignore only accidental local copies or exports.
+*.tmp
+*~
+.DS_Store

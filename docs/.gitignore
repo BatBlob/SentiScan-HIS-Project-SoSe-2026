@@ -1,0 +1,4 @@
+# Generated / exported docs (keep markdown and JSON examples tracked)
+*.tmp
+*~
+.DS_Store

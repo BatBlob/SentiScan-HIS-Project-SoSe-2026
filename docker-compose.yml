@@ -1,0 +1,29 @@
+services:
+  mongodb:
+    image: mongo:7
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      MONGODB_URI: mongodb://mongodb:27017
+      MONGODB_DB: sentiscan
+      UPLOAD_DIR: /app/uploads
+      R_SCRIPT_PATH: /app/r-engine/run_analysis.R
+      CORS_ORIGINS: http://localhost:5173,http://localhost:3000
+    volumes:
+      - ./uploads:/app/uploads
+      - ./r-engine:/app/r-engine
+      - ./sample-data:/app/sample-data
+    depends_on:
+      - mongodb
+
+volumes:
+  mongodb_data:

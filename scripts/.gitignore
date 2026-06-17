@@ -1,0 +1,6 @@
+# Python cache from demo_e2e.py etc.
+__pycache__/
+*.py[cod]
+
+# Local test outputs
+*.tmp

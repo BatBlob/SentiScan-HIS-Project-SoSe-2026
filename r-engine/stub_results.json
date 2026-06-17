@@ -1,0 +1,195 @@
+{
+  "entries": [
+    {
+      "row_index": 0,
+      "polarity": "Positive",
+      "polarity_confidence": 0.87,
+      "emotions": {
+        "happiness": 0.6,
+        "sadness": 0.05,
+        "anger": 0.05,
+        "fear": 0.05,
+        "surprise": 0.15,
+        "disgust": 0.05
+      },
+      "intent": "compliment",
+      "sarcasm_flag": false,
+      "sarcasm_confidence": 0.12,
+      "aspects": [
+        { "term": "teaching quality", "sentiment": "Positive", "score": 0.72 },
+        { "term": "course materials", "sentiment": "Positive", "score": 0.55 }
+      ],
+      "topics": [{ "topic_id": 1, "weight": 0.4 }]
+    },
+    {
+      "row_index": 1,
+      "polarity": "Negative",
+      "polarity_confidence": 0.81,
+      "emotions": {
+        "happiness": 0.1,
+        "sadness": 0.25,
+        "anger": 0.35,
+        "fear": 0.1,
+        "surprise": 0.1,
+        "disgust": 0.2
+      },
+      "intent": "complaint",
+      "sarcasm_flag": false,
+      "sarcasm_confidence": 0.08,
+      "aspects": [
+        { "term": "workload", "sentiment": "Negative", "score": -0.78 },
+        { "term": "deadlines", "sentiment": "Negative", "score": -0.65 }
+      ],
+      "topics": [{ "topic_id": 2, "weight": 0.55 }]
+    },
+    {
+      "row_index": 2,
+      "polarity": "Very Positive",
+      "polarity_confidence": 0.92,
+      "emotions": {
+        "happiness": 0.75,
+        "sadness": 0.02,
+        "anger": 0.02,
+        "fear": 0.03,
+        "surprise": 0.12,
+        "disgust": 0.01
+      },
+      "intent": "compliment",
+      "sarcasm_flag": true,
+      "sarcasm_confidence": 0.84,
+      "aspects": [
+        { "term": "lectures", "sentiment": "Positive", "score": 0.9 }
+      ],
+      "topics": [{ "topic_id": 1, "weight": 0.35 }]
+    },
+    {
+      "row_index": 3,
+      "polarity": "Neutral",
+      "polarity_confidence": 0.68,
+      "emotions": {
+        "happiness": 0.2,
+        "sadness": 0.15,
+        "anger": 0.1,
+        "fear": 0.1,
+        "surprise": 0.2,
+        "disgust": 0.1
+      },
+      "intent": "statement",
+      "sarcasm_flag": false,
+      "sarcasm_confidence": 0.15,
+      "aspects": [
+        { "term": "online format", "sentiment": "Neutral", "score": 0.05 }
+      ],
+      "topics": [{ "topic_id": 3, "weight": 0.45 }]
+    },
+    {
+      "row_index": 4,
+      "polarity": "Negative",
+      "polarity_confidence": 0.76,
+      "emotions": {
+        "happiness": 0.05,
+        "sadness": 0.3,
+        "anger": 0.25,
+        "fear": 0.15,
+        "surprise": 0.1,
+        "disgust": 0.15
+      },
+      "intent": "suggestion",
+      "sarcasm_flag": false,
+      "sarcasm_confidence": 0.1,
+      "aspects": [
+        { "term": "grading", "sentiment": "Negative", "score": -0.6 },
+        { "term": "feedback speed", "sentiment": "Negative", "score": -0.5 }
+      ],
+      "topics": [{ "topic_id": 2, "weight": 0.5 }]
+    }
+  ],
+  "aggregates": {
+    "polarity_distribution": {
+      "Very Positive": 8,
+      "Positive": 18,
+      "Neutral": 12,
+      "Negative": 9,
+      "Very Negative": 3
+    },
+    "emotion_distribution": {
+      "happiness": 0.32,
+      "sadness": 0.14,
+      "anger": 0.11,
+      "fear": 0.08,
+      "surprise": 0.18,
+      "disgust": 0.07
+    },
+    "intent_distribution": {
+      "complaint": 14,
+      "suggestion": 10,
+      "inquiry": 6,
+      "compliment": 15,
+      "statement": 5
+    },
+    "keywords_positive": [
+      { "word": "excellent", "score": 0.42 },
+      { "word": "engaging", "score": 0.38 },
+      { "word": "helpful", "score": 0.35 },
+      { "word": "clear", "score": 0.31 },
+      { "word": "supportive", "score": 0.28 }
+    ],
+    "keywords_negative": [
+      { "word": "overwhelming", "score": -0.41 },
+      { "word": "confusing", "score": -0.36 },
+      { "word": "slow", "score": -0.33 },
+      { "word": "stressful", "score": -0.29 },
+      { "word": "unclear", "score": -0.25 }
+    ],
+    "topics": [
+      {
+        "id": 1,
+        "label": "Teaching & Lectures",
+        "keywords": ["lectures", "professor", "explanation", "teaching"],
+        "sentiment_profile": {
+          "Positive": 22,
+          "Neutral": 5,
+          "Negative": 3
+        }
+      },
+      {
+        "id": 2,
+        "label": "Workload & Deadlines",
+        "keywords": ["workload", "assignments", "deadlines", "stress"],
+        "sentiment_profile": {
+          "Positive": 4,
+          "Neutral": 6,
+          "Negative": 18
+        }
+      },
+      {
+        "id": 3,
+        "label": "Course Resources",
+        "keywords": ["materials", "slides", "readings", "platform"],
+        "sentiment_profile": {
+          "Positive": 12,
+          "Neutral": 8,
+          "Negative": 5
+        }
+      }
+    ],
+    "temporal_trend": [
+      { "period": "2025-01", "avg_polarity": 0.35 },
+      { "period": "2025-02", "avg_polarity": 0.28 },
+      { "period": "2025-03", "avg_polarity": 0.12 },
+      { "period": "2025-04", "avg_polarity": -0.08 },
+      { "period": "2025-05", "avg_polarity": 0.05 }
+    ],
+    "sarcasm_count": 7,
+    "word_cloud": [
+      { "word": "lectures", "weight": 18 },
+      { "word": "workload", "weight": 16 },
+      { "word": "helpful", "weight": 14 },
+      { "word": "assignments", "weight": 13 },
+      { "word": "excellent", "weight": 12 },
+      { "word": "stressful", "weight": 11 },
+      { "word": "feedback", "weight": 10 },
+      { "word": "materials", "weight": 9 }
+    ]
+  }
+}

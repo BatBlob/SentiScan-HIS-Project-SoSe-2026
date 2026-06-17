@@ -1,0 +1,34 @@
+# Secrets
+.env
+.env.local
+
+# Python virtual environments
+.venv/
+venv/
+env/
+
+# Bytecode & caches
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Test / coverage
+.coverage
+htmlcov/
+.tox/
+
+# Packaging
+*.egg-info/
+.eggs/
+dist/
+build/
+
+# Accidental Node artifacts in backend folder
+node_modules/
+package-lock.json
+
+# Local upload dir when resolved relative to backend/
+uploads/

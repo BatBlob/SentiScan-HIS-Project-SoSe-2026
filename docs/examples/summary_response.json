@@ -1,0 +1,54 @@
+{
+  "job_id": "example-job-id",
+  "status": "completed",
+  "include_sarcasm_in_aggregates": true,
+  "aggregates": {
+    "polarity_distribution": {
+      "Very Positive": 8,
+      "Positive": 18,
+      "Neutral": 12,
+      "Negative": 9,
+      "Very Negative": 3
+    },
+    "emotion_distribution": {
+      "happiness": 0.32,
+      "sadness": 0.14,
+      "anger": 0.11,
+      "fear": 0.08,
+      "surprise": 0.18,
+      "disgust": 0.07
+    },
+    "intent_distribution": {
+      "complaint": 14,
+      "suggestion": 10,
+      "inquiry": 6,
+      "compliment": 15,
+      "statement": 5
+    },
+    "keywords_positive": [
+      { "word": "excellent", "score": 0.42 },
+      { "word": "engaging", "score": 0.38 }
+    ],
+    "keywords_negative": [
+      { "word": "overwhelming", "score": -0.41 },
+      { "word": "confusing", "score": -0.36 }
+    ],
+    "topics": [
+      {
+        "id": 1,
+        "label": "Teaching & Lectures",
+        "keywords": ["lectures", "professor", "explanation"],
+        "sentiment_profile": { "Positive": 22, "Neutral": 5, "Negative": 3 }
+      }
+    ],
+    "temporal_trend": [
+      { "period": "2025-01", "avg_polarity": 0.35 },
+      { "period": "2025-02", "avg_polarity": 0.28 }
+    ],
+    "sarcasm_count": 7,
+    "word_cloud": [
+      { "word": "lectures", "weight": 18 },
+      { "word": "workload", "weight": 16 }
+    ]
+  }
+}

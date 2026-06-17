@@ -1,0 +1,4 @@
+# Wireframe source HTML is tracked; ignore editor backups only
+*.tmp
+*~
+.DS_Store

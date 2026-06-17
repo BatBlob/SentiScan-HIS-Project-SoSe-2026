@@ -1,0 +1,17 @@
+# R session & workspace data
+.Rhistory
+.RData
+.Ruserdata
+*.Rproj
+.Rproj.user/
+
+# R package build artifacts
+*.tar.gz
+/check/
+
+# Generated analysis output (stub writes here during dev)
+output/
+results/
+*.json.bak
+
+# Keep tracked source: run_analysis.R, stub_results.json

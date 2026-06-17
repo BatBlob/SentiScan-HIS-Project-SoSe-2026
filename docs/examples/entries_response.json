@@ -1,0 +1,36 @@
+{
+  "job_id": "example-job-id",
+  "total": 50,
+  "page": 1,
+  "limit": 20,
+  "entries": [
+    {
+      "job_id": "example-job-id",
+      "row_index": 1,
+      "original_text": "Too much workload for one semester.",
+      "original_row": {
+        "id": "2",
+        "date": "2025-01-18",
+        "comment": "Too much workload for one semester."
+      },
+      "polarity": "Negative",
+      "polarity_confidence": 0.81,
+      "emotions": {
+        "happiness": 0.1,
+        "sadness": 0.25,
+        "anger": 0.35,
+        "fear": 0.1,
+        "surprise": 0.1,
+        "disgust": 0.2
+      },
+      "intent": "complaint",
+      "sarcasm_flag": false,
+      "sarcasm_confidence": 0.08,
+      "aspects": [
+        { "term": "workload", "sentiment": "Negative", "score": -0.78 },
+        { "term": "deadlines", "sentiment": "Negative", "score": -0.65 }
+      ],
+      "topics": [{ "topic_id": 2, "weight": 0.55 }]
+    }
+  ]
+}
