@@ -48,6 +48,7 @@ export function generateInsight(
     }
     case "emotion": {
       const emo = aggregates.emotion_distribution;
+      if (Object.keys(emo).length === 0) return "Emotion data is not available — R pipeline was not reachable when this analysis ran.";
       const top = Object.entries(emo).sort((a, b) => b[1] - a[1])[0];
       const topLabel = top ? formatEmotion(top[0]) : "Joy";
       const topPct = top ? Math.round(top[1] * 100) : 0;
@@ -67,12 +68,15 @@ export function generateInsight(
       return `${count} entries (${pctVal}%) are flagged as likely sarcastic. Excluding these from aggregate calculations can improve accuracy of overall sentiment scores.`;
     }
     case "keywords": {
+      if (aggregates.keywords_positive.length === 0 && aggregates.keywords_negative.length === 0)
+        return "Keyword data is not available — R pipeline was not reachable when this analysis ran.";
       const pos = aggregates.keywords_positive[0]?.word ?? "—";
       const neg = aggregates.keywords_negative[0]?.word ?? "—";
       return `"${pos}" leads positive-driving terms while "${neg}" appears among the strongest negative signals. Keyword scores reflect model contribution, not raw frequency alone.`;
     }
     case "topics": {
       const n = aggregates.topics.length;
+      if (n === 0) return "Topic data is not available — R pipeline was not reachable when this analysis ran.";
       return `${n} recurring themes were identified. Each topic includes a sentiment profile to show how people feel about that theme specifically.`;
     }
     case "trend": {

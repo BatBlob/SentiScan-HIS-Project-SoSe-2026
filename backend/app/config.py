@@ -17,6 +17,10 @@ class Settings(BaseSettings):
     r_executable: str = "Rscript"
     max_rows: int = 10000
     cors_origins: str = "http://localhost:5173,http://localhost:3000"
+    ml_model_url: str = "https://sentimentanalysisrhis-production.up.railway.app"
+    r_plumber_url: str = "http://localhost:8080"
+    ml_request_timeout: float = 120.0
+    r_plumber_request_timeout: float = 300.0
 
     @property
     def upload_path(self) -> Path:

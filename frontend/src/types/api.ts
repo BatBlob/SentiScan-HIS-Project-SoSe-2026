@@ -93,6 +93,7 @@ export interface SummaryResponse {
   status: JobStatus;
   include_sarcasm_in_aggregates: boolean;
   aggregates: Aggregates;
+  r_pipeline_error?: string | null;
 }
 
 export interface EntryListResponse {

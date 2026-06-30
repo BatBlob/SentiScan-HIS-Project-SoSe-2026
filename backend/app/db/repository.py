@@ -78,6 +78,7 @@ class Repository:
         started_at: datetime | None = None,
         completed_at: datetime | None = None,
         include_sarcasm_in_aggregates: bool | None = None,
+        r_pipeline_error: str | None = None,
     ) -> None:
         update: dict[str, Any] = {}
         if status is not None:
@@ -88,6 +89,8 @@ class Repository:
             update["message"] = message
         if error is not None:
             update["error"] = error
+        if r_pipeline_error is not None:
+            update["r_pipeline_error"] = r_pipeline_error
         if started_at is not None:
             update["started_at"] = started_at
         if completed_at is not None:

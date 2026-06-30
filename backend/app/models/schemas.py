@@ -155,3 +155,4 @@ class SummaryResponse(BaseModel):
     status: JobStatus
     include_sarcasm_in_aggregates: bool
     aggregates: Aggregates
+    r_pipeline_error: str | None = None

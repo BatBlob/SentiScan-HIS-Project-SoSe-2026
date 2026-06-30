@@ -6,6 +6,14 @@ services:
     volumes:
       - mongodb_data:/data/db
 
+  r-plumber:
+    build:
+      context: ./sentiscan-r-analysis-pipeline
+    ports:
+      - "8080:8000"
+    environment:
+      PORT: "8000"
+
   api:
     build:
       context: ./backend
@@ -18,12 +26,15 @@ services:
       UPLOAD_DIR: /app/uploads
       R_SCRIPT_PATH: /app/r-engine/run_analysis.R
       CORS_ORIGINS: http://localhost:5173,http://localhost:3000
+      ML_MODEL_URL: https://sentimentanalysisrhis-production.up.railway.app
+      R_PLUMBER_URL: http://r-plumber:8000
     volumes:
       - ./uploads:/app/uploads
       - ./r-engine:/app/r-engine
       - ./sample-data:/app/sample-data
     depends_on:
       - mongodb
+      - r-plumber
 
 volumes:
   mongodb_data:

@@ -1,13 +1,29 @@
 import { AiInsightBox } from "../AiInsightBox";
+import { PanelRPipelineNotice } from "../PanelRPipelineNotice";
 import type { Aggregates, EntryDocument } from "../../../types/api";
 
 interface Props {
   aggregates: Aggregates;
   entries: EntryDocument[];
   totalEntries: number;
+  rPipelineError?: string | null;
 }
 
-export function KeywordsPanel({ aggregates, entries, totalEntries }: Props) {
+export function KeywordsPanel({ aggregates, entries, totalEntries, rPipelineError }: Props) {
+  const hasData =
+    aggregates.keywords_positive.length > 0 ||
+    aggregates.keywords_negative.length > 0 ||
+    aggregates.word_cloud.length > 0;
+
+  if (!hasData) {
+    return (
+      <PanelRPipelineNotice
+        rPipelineError={rPipelineError}
+        moduleName="Keyword scoring"
+      />
+    );
+  }
+
   const posMax = Math.max(...aggregates.keywords_positive.map((k) => Math.abs(k.score)), 0.01);
   const negMax = Math.max(...aggregates.keywords_negative.map((k) => Math.abs(k.score)), 0.01);
   const cloudMax = Math.max(...aggregates.word_cloud.map((w) => w.weight), 1);

@@ -156,7 +156,12 @@ export function DashboardPage() {
   }
 
   const aggregates: Aggregates = summary.aggregates;
-  const panelProps = { aggregates, entries, totalEntries };
+  const panelProps = {
+    aggregates,
+    entries,
+    totalEntries,
+    rPipelineError: summary.r_pipeline_error,
+  };
 
   return (
     <div className="app">

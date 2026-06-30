@@ -69,6 +69,7 @@ async def get_summary(job_id: str) -> SummaryResponse:
         status=JobStatus(job["status"]),
         include_sarcasm_in_aggregates=job.get("include_sarcasm_in_aggregates", True),
         aggregates=aggregates,
+        r_pipeline_error=job.get("r_pipeline_error"),
     )
 
 

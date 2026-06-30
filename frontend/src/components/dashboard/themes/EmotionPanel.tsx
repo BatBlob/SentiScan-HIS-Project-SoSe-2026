@@ -1,4 +1,5 @@
 import { AiInsightBox } from "../AiInsightBox";
+import { PanelRPipelineNotice } from "../PanelRPipelineNotice";
 import { BarRow } from "../shared/BarRow";
 import type { Aggregates, EntryDocument } from "../../../types/api";
 import { formatEmotion } from "../../../utils/formatters";
@@ -7,6 +8,7 @@ interface Props {
   aggregates: Aggregates;
   entries: EntryDocument[];
   totalEntries: number;
+  rPipelineError?: string | null;
 }
 
 const EMO_CONFIG = [
@@ -18,8 +20,18 @@ const EMO_CONFIG = [
   { key: "disgust", label: "Disgust", cls: "bar-disg", emoji: "🤢", bg: "#ffedd5" },
 ];
 
-export function EmotionPanel({ aggregates, entries, totalEntries }: Props) {
+export function EmotionPanel({ aggregates, entries, totalEntries, rPipelineError }: Props) {
   const emo = aggregates.emotion_distribution;
+  const hasData = Object.keys(emo).length > 0;
+
+  if (!hasData) {
+    return (
+      <PanelRPipelineNotice
+        rPipelineError={rPipelineError}
+        moduleName="Emotion detection"
+      />
+    );
+  }
 
   return (
     <>

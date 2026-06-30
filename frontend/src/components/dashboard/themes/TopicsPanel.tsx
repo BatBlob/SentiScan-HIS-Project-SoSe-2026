@@ -1,13 +1,24 @@
 import { AiInsightBox } from "../AiInsightBox";
+import { PanelRPipelineNotice } from "../PanelRPipelineNotice";
 import type { Aggregates, EntryDocument } from "../../../types/api";
 
 interface Props {
   aggregates: Aggregates;
   entries: EntryDocument[];
   totalEntries: number;
+  rPipelineError?: string | null;
 }
 
-export function TopicsPanel({ aggregates, entries, totalEntries }: Props) {
+export function TopicsPanel({ aggregates, entries, totalEntries, rPipelineError }: Props) {
+  if (aggregates.topics.length === 0) {
+    return (
+      <PanelRPipelineNotice
+        rPipelineError={rPipelineError}
+        moduleName="Topic modelling"
+      />
+    );
+  }
+
   return (
     <>
       <AiInsightBox theme="topics" aggregates={aggregates} entries={entries} totalEntries={totalEntries} />
