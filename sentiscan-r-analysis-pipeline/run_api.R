@@ -1,6 +1,6 @@
 library(plumber)
 
-port <- as.integer(Sys.getenv("PORT", "8000"))
+port <- as.integer(Sys.getenv("PORT", "8080"))
 
 pr("plumber.R") %>%
   pr_run(

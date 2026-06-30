@@ -33,6 +33,7 @@ build/
 .ruff_cache/
 .coverage
 htmlcov/
+.vnv/*
 
 # Node / frontend build
 node_modules/

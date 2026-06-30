@@ -33,9 +33,10 @@ R_EMOTION_MAP = {
     "fear": "fear",
     "surprise": "surprise",
     "disgust": "disgust",
+    "trust": "trust",
+    "anticipation": "anticipation",
 }
-
-DROP_EMOTIONS = {"trust", "anticipation", "positive", "negative"}
+DROP_EMOTIONS = {"positive", "negative"}
 
 
 def _as_r_list(value: Any) -> list[dict[str, Any]]:
@@ -56,19 +57,27 @@ def _as_r_list(value: Any) -> list[dict[str, Any]]:
         return [value]
     return []
 
-
 def _normalize_r_label(raw_label: str | None, is_labelled: bool) -> str:
-    if not is_labelled or not raw_label:
+    if not is_labelled or raw_label is None:
         return "neutral"
     label = str(raw_label).strip().lower()
-    if label in ("pos", "positive"):
+    if label in ("pos", "positive", "1"):
         return "pos"
-    if label in ("neg", "negative"):
+    if label in ("neg", "negative", "0"):
         return "neg"
-    if label == "neutral":
+    if label in ("neutral", "neu", "2"):
         return "neutral"
-    return label
+    return "neutral"
 
+def _map_r_documents(documents_raw: Any) -> dict[int, dict[str, Any]]:
+    items = _as_r_list(documents_raw)
+    out: dict[int, dict[str, Any]] = {}
+    for item in items:
+        doc_id = item.get("doc_id")
+        if doc_id is None:
+            continue
+        out[int(doc_id)] = item
+    return out
 
 def _map_r_emotions(emotions_raw: Any) -> dict[str, float]:
     items = _as_r_list(emotions_raw)
@@ -264,15 +273,20 @@ def assemble_analysis_output(
     label_column: str | None = None,
 ) -> RAnalysisOutput:
     shared_emotions = _map_r_emotions(r_response.get("emotions") if r_response else None)
+    r_documents = _map_r_documents(r_response.get("documents") if r_response else None)
 
     entries: list[EntryResult] = []
     for i, (row, ml_pred) in enumerate(zip(rows, ml_predictions, strict=False)):
+        doc_id = i + 1  # see caveat below
+        r_doc = r_documents.get(doc_id)
+        per_doc_emotion = {r_doc["emotion"]: 1.0} if r_doc and r_doc.get("emotion") else shared_emotions
+
         entries.append(
             EntryResult(
                 row_index=i,
                 polarity=ml_pred["polarity_class"],
                 polarity_confidence=ml_pred["polarity_confidence"],
-                emotions=shared_emotions,
+                emotions=per_doc_emotion,   # CHANGED: per-row instead of shared
                 intent="",
                 sarcasm_flag=False,
                 sarcasm_confidence=0.0,
@@ -285,9 +299,8 @@ def assemble_analysis_output(
     polarities = [p["polarity_class"] for p in ml_predictions]
 
     if r_response:
-        top_words = r_response.get("top_words")
-        keywords_positive, keywords_negative = _split_keywords(top_words, texts, polarities)
-        word_cloud = _word_cloud_from_r(top_words)
+        keywords_positive, keywords_negative = _keywords_from_r(r_response.get("keyword_scores"))  # CHANGED
+        word_cloud = _word_cloud_from_r(r_response.get("top_words"))
         topics = _topics_from_r(r_response.get("topics"), polarities)
         emotion_distribution = shared_emotions
     else:
@@ -318,21 +331,34 @@ def build_r_documents(
     rows: list[dict[str, str]],
     *,
     text_column: str,
-    is_labelled: bool = False,
+    is_labelled: bool = True,
     label_column: str | None = None,
-) -> list[dict[str, str]]:
+) -> dict[str, list[dict[str, str]]]:
     documents: list[dict[str, str]] = []
     for row in rows:
         raw_text = str(row.get(text_column, "")).strip()
         if not raw_text:
             continue
-        label_value = None
-        if label_column:
-            label_value = row.get(label_column)
+        label_value = row.get(label_column) if label_column else None
         documents.append(
             {
                 "raw_text": raw_text,
                 "label": _normalize_r_label(label_value, is_labelled),
             }
         )
-    return documents
+    return {"documents": documents}
+
+def _keywords_from_r(keyword_scores_raw: Any) -> tuple[list[KeywordScore], list[KeywordScore]]:
+    if not isinstance(keyword_scores_raw, dict):
+        return [], []
+    pos_items = _as_r_list(keyword_scores_raw.get("positive"))
+    neg_items = _as_r_list(keyword_scores_raw.get("negative"))
+    keywords_positive = [
+        KeywordScore(word=str(i["word"]), score=float(i["score"]))
+        for i in pos_items if "word" in i and "score" in i
+    ]
+    keywords_negative = [
+        KeywordScore(word=str(i["word"]), score=float(i["score"]))
+        for i in neg_items if "word" in i and "score" in i
+    ]
+    return keywords_positive[:10], keywords_negative[:10]
