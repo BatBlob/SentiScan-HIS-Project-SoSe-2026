@@ -9,7 +9,7 @@ from app.models.schemas import (
     JobStatus,
 )
 from app.services.ingestion import load_csv_rows, validate_text_column
-from app.services.ml_client import get_polarity_predictions
+from app.services.ml_client import get_absa_predictions, get_polarity_predictions
 from app.services.pipeline_assembler import assemble_analysis_output, build_r_documents
 from app.services.r_client import get_r_analysis
 
@@ -72,6 +72,13 @@ async def run_analysis_job(job_id: str) -> None:
         )
         ml_predictions = await get_polarity_predictions(texts)
 
+        await repository.update_job(
+            job_id,
+            progress=35,
+            message="Running ABSA and intent detection",
+        )
+        absa_predictions = await get_absa_predictions(texts)
+
         documents = build_r_documents(
             rows,
             text_column=config.text_column,
@@ -97,6 +104,7 @@ async def run_analysis_job(job_id: str) -> None:
             rows,
             ml_predictions,
             r_response,
+            absa_predictions=absa_predictions,
             text_column=config.text_column,
             timestamp_column=config.timestamp_column,
             is_labelled=config.is_labelled,

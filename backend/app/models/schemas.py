@@ -34,6 +34,14 @@ class AspectScore(BaseModel):
     score: float
 
 
+class AspectAggregate(BaseModel):
+    term: str
+    positive: int = 0
+    neutral: int = 0
+    negative: int = 0
+    total: int = 0
+
+
 class TopicWeight(BaseModel):
     topic_id: int
     weight: float
@@ -80,13 +88,14 @@ class Aggregates(BaseModel):
     polarity_distribution: dict[str, int] = Field(default_factory=dict)
     emotion_distribution: dict[str, float] = Field(default_factory=dict)
     intent_distribution: dict[str, int] = Field(default_factory=dict)
+    aspect_sentiment: list[AspectAggregate] = Field(default_factory=list)
     keywords_positive: list[KeywordScore] = Field(default_factory=list)
     keywords_negative: list[KeywordScore] = Field(default_factory=list)
     topics: list[TopicAggregate] = Field(default_factory=list)
     temporal_trend: list[TemporalPoint] = Field(default_factory=list)
     sarcasm_count: int = 0
     word_cloud: list[WordCloudItem] = Field(default_factory=list)
-    top_bigrams: list[BigramScore] 
+    top_bigrams: list[BigramScore] = Field(default_factory=list)
 
 
 class RAnalysisOutput(BaseModel):

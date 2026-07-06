@@ -5,10 +5,11 @@ from __future__ import annotations
 from collections import Counter, defaultdict
 from datetime import datetime
 from typing import Any
-from app.models.schemas import BigramScore
-
 from app.models.schemas import (
     Aggregates,
+    AspectAggregate,
+    AspectScore,
+    BigramScore,
     EntryResult,
     KeywordScore,
     RAnalysisOutput,
@@ -184,9 +185,7 @@ def _word_cloud_from_r(top_words: Any) -> list[WordCloudItem]:
         items.append(WordCloudItem(word=word, weight=weight))
     return items
 
-def _bigrams_from_r(top_bigrams_raw: Any) -> list["BigramScore"]:
-    from app.models.schemas import BigramScore  # adjust import path as needed
- 
+def _bigrams_from_r(top_bigrams_raw: Any) -> list[BigramScore]:
     items = _as_r_list(top_bigrams_raw)
     if not items:
         return []
@@ -280,35 +279,82 @@ def _period_from_timestamp(raw: str) -> str | None:
     return None
 
 
+def _build_intent_distribution(absa_predictions: list[dict[str, Any]]) -> dict[str, int]:
+    counts: dict[str, int] = {}
+    for pred in absa_predictions:
+        intent = str(pred.get("intent", "")).strip().lower()
+        if intent:
+            counts[intent] = counts.get(intent, 0) + 1
+    return counts
+
+
+def _build_aspect_sentiment(absa_predictions: list[dict[str, Any]]) -> list[AspectAggregate]:
+    agg: dict[str, dict[str, int]] = {}
+    for pred in absa_predictions:
+        for asp in pred.get("aspects", []):
+            term = str(asp.get("term", "")).strip().lower()
+            sent = str(asp.get("sentiment", "neutral")).lower()
+            if not term:
+                continue
+            if term not in agg:
+                agg[term] = {"positive": 0, "neutral": 0, "negative": 0, "total": 0}
+            agg[term]["total"] += 1
+            if sent == "positive":
+                agg[term]["positive"] += 1
+            elif sent == "negative":
+                agg[term]["negative"] += 1
+            else:
+                agg[term]["neutral"] += 1
+    return sorted(
+        [AspectAggregate(term=t, **counts) for t, counts in agg.items()],
+        key=lambda a: a.total,
+        reverse=True,
+    )
+
+
 def assemble_analysis_output(
     rows: list[dict[str, str]],
     ml_predictions: list[dict[str, Any]],
     r_response: dict[str, Any] | None,
     *,
+    absa_predictions: list[dict[str, Any]] | None = None,
     text_column: str,
     timestamp_column: str | None = None,
     is_labelled: bool = False,
     label_column: str | None = None,
 ) -> RAnalysisOutput:
+    absa_predictions = absa_predictions or []
     shared_emotions = _map_r_emotions(r_response.get("emotions") if r_response else None)
     r_documents = _map_r_documents(r_response.get("documents") if r_response else None)
 
     entries: list[EntryResult] = []
     for i, (row, ml_pred) in enumerate(zip(rows, ml_predictions, strict=False)):
-        doc_id = i + 1  # see caveat below
+        doc_id = i + 1
         r_doc = r_documents.get(doc_id)
         per_doc_emotion = {r_doc["emotion"]: 1.0} if r_doc and r_doc.get("emotion") else shared_emotions
+
+        absa = absa_predictions[i] if i < len(absa_predictions) else {}
+        intent = str(absa.get("intent", "")).strip()
+        aspects = [
+            AspectScore(
+                term=str(a["term"]),
+                sentiment=str(a["sentiment"]),
+                score=float(a["score"]),
+            )
+            for a in absa.get("aspects", [])
+            if a.get("term")
+        ]
 
         entries.append(
             EntryResult(
                 row_index=i,
                 polarity=ml_pred["polarity_class"],
                 polarity_confidence=ml_pred["polarity_confidence"],
-                emotions=per_doc_emotion,   # CHANGED: per-row instead of shared
-                intent="",
+                emotions=per_doc_emotion,
+                intent=intent,
                 sarcasm_flag=False,
                 sarcasm_confidence=0.0,
-                aspects=[],
+                aspects=aspects,
                 topics=[],
             )
         )
@@ -336,14 +382,15 @@ def assemble_analysis_output(
     aggregates = Aggregates(
         polarity_distribution=_polarity_distribution_from_ml(ml_predictions),
         emotion_distribution=emotion_distribution,
-        intent_distribution={},
+        intent_distribution=_build_intent_distribution(absa_predictions),
+        aspect_sentiment=_build_aspect_sentiment(absa_predictions),
         keywords_positive=keywords_positive,
         keywords_negative=keywords_negative,
         topics=topics,
         temporal_trend=temporal,
         sarcasm_count=0,
         word_cloud=word_cloud,
-        top_bigrams=top_bigrams,   # NEW
+        top_bigrams=top_bigrams,
     )
 
     return RAnalysisOutput(entries=entries, aggregates=aggregates)

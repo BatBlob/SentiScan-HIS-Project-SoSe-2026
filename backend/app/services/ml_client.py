@@ -63,6 +63,57 @@ def _stub_predictions(texts: list[str]) -> list[dict[str, Any]]:
     ]
 
 
+async def get_absa_predictions(texts: list[str]) -> list[dict[str, Any]]:
+    """
+    POST /analyze with { "texts": [...] }.
+    Returns [{ intent, aspects: [{ term, sentiment, score }] }, ...] per entry.
+    Falls back to empty data when the model is unreachable.
+    """
+    empty = [{"intent": "", "aspects": []} for _ in texts]
+    if not texts:
+        return empty
+
+    base_url = (settings.ml_model_url or "").strip().rstrip("/")
+    if not base_url:
+        logger.warning("ML_MODEL_URL not configured; skipping ABSA")
+        return empty
+
+    url = f"{base_url}/analyze"
+    try:
+        async with httpx.AsyncClient(timeout=settings.ml_request_timeout) as client:
+            response = await client.post(url, json={"texts": texts})
+            response.raise_for_status()
+            payload = response.json()
+    except (httpx.HTTPError, ValueError) as exc:
+        logger.warning("ML model /analyze unreachable (%s); skipping ABSA", exc)
+        return empty
+
+    predictions = payload.get("predictions") or []
+    if len(predictions) != len(texts):
+        logger.warning(
+            "ML /analyze returned %d predictions for %d texts; skipping ABSA",
+            len(predictions),
+            len(texts),
+        )
+        return empty
+
+    results: list[dict[str, Any]] = []
+    for pred in predictions:
+        intent = str(_extract_scalar(pred.get("intent", "")) or "")
+        absa_raw = pred.get("absa") or []
+        aspects: list[dict[str, Any]] = []
+        for ab in absa_raw:
+            term = str(_extract_scalar(ab.get("aspect", "")) or "").strip()
+            sentiment = str(_extract_scalar(ab.get("sentiment", "neutral")) or "neutral").lower()
+            probs = ab.get("probabilities") or {}
+            raw_score = probs.get(sentiment, 0.5)
+            score = float(_extract_scalar(raw_score) or 0.5)
+            if term:
+                aspects.append({"term": term, "sentiment": sentiment, "score": round(score, 4)})
+        results.append({"intent": intent, "aspects": aspects})
+    return results
+
+
 async def get_polarity_predictions(texts: list[str]) -> list[dict[str, Any]]:
     """
     POST /predict with { "texts": [...] }.

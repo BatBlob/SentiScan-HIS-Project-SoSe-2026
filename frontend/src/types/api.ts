@@ -34,6 +34,19 @@ export interface AspectScore {
   score: number;
 }
 
+export interface AspectAggregate {
+  term: string;
+  positive: number;
+  neutral: number;
+  negative: number;
+  total: number;
+}
+
+export interface BigramScore {
+  bigram: string;
+  count: number;
+}
+
 export interface TopicWeight {
   topic_id: number;
   weight: number;
@@ -80,12 +93,14 @@ export interface Aggregates {
   polarity_distribution: Record<string, number>;
   emotion_distribution: Record<string, number>;
   intent_distribution: Record<string, number>;
+  aspect_sentiment: AspectAggregate[];
   keywords_positive: KeywordScore[];
   keywords_negative: KeywordScore[];
   topics: TopicAggregate[];
   temporal_trend: TemporalPoint[];
   sarcasm_count: number;
   word_cloud: WordCloudItem[];
+  top_bigrams?: BigramScore[];
 }
 
 export interface SummaryResponse {
