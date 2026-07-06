@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections import Counter, defaultdict
 from datetime import datetime
 from typing import Any
+from app.models.schemas import BigramScore
 
 from app.models.schemas import (
     Aggregates,
@@ -183,6 +184,23 @@ def _word_cloud_from_r(top_words: Any) -> list[WordCloudItem]:
         items.append(WordCloudItem(word=word, weight=weight))
     return items
 
+def _bigrams_from_r(top_bigrams_raw: Any) -> list["BigramScore"]:
+    from app.models.schemas import BigramScore  # adjust import path as needed
+ 
+    items = _as_r_list(top_bigrams_raw)
+    if not items:
+        return []
+    out: list[BigramScore] = []
+    for item in items[:20]:
+        bigram = str(item.get("bigram", ""))
+        if not bigram:
+            continue
+        try:
+            count = int(item.get("count", 0))
+        except (TypeError, ValueError):
+            count = 0
+        out.append(BigramScore(bigram=bigram, count=count))
+    return out
 
 def _topics_from_r(
     topics_raw: Any,
@@ -299,8 +317,10 @@ def assemble_analysis_output(
     polarities = [p["polarity_class"] for p in ml_predictions]
 
     if r_response:
-        keywords_positive, keywords_negative = _keywords_from_r(r_response.get("keyword_scores"))  # CHANGED
-        word_cloud = _word_cloud_from_r(r_response.get("top_words"))
+        top_words = r_response.get("top_words")
+        keywords_positive, keywords_negative = _keywords_from_r(r_response.get("keyword_scores"))
+        word_cloud = _word_cloud_from_r(top_words)
+        top_bigrams = _bigrams_from_r(r_response.get("top_bigrams"))   # NEW
         topics = _topics_from_r(r_response.get("topics"), polarities)
         emotion_distribution = shared_emotions
     else:
@@ -309,6 +329,7 @@ def assemble_analysis_output(
         word_cloud = []
         topics = []
         emotion_distribution = {}
+        top_bigrams = []
 
     temporal = _temporal_trend(rows, ml_predictions, timestamp_column)
 
@@ -322,6 +343,7 @@ def assemble_analysis_output(
         temporal_trend=temporal,
         sarcasm_count=0,
         word_cloud=word_cloud,
+        top_bigrams=top_bigrams,   # NEW
     )
 
     return RAnalysisOutput(entries=entries, aggregates=aggregates)

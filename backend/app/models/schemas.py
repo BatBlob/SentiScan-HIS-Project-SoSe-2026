@@ -72,6 +72,9 @@ class WordCloudItem(BaseModel):
     word: str
     weight: float
 
+class BigramScore(BaseModel):
+    bigram: str
+    count: int
 
 class Aggregates(BaseModel):
     polarity_distribution: dict[str, int] = Field(default_factory=dict)
@@ -83,6 +86,7 @@ class Aggregates(BaseModel):
     temporal_trend: list[TemporalPoint] = Field(default_factory=list)
     sarcasm_count: int = 0
     word_cloud: list[WordCloudItem] = Field(default_factory=list)
+    top_bigrams: list[BigramScore] 
 
 
 class RAnalysisOutput(BaseModel):

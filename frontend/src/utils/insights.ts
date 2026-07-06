@@ -12,6 +12,7 @@ export function getInsightTitle(theme: ThemeId): string {
     topics: "Topic Modelling",
     trend: "Temporal Trend",
     confidence: "Confidence Scoring",
+    wordanalysis: "Word Analysis",
   };
   return titles[theme];
 }
@@ -93,6 +94,12 @@ export function generateInsight(
         (entries.length || 1);
       const low = entries.filter((e) => e.polarity_confidence < 0.6).length;
       return `Average model confidence is ${Math.round(avg * 100)}%. ${low} entries score below 60% and may warrant manual review before drawing conclusions.`;
+    }
+    case "wordanalysis": {
+      const words = aggregates.word_cloud ?? [];
+      const bigrams = aggregates.top_bigrams ?? [];
+      if (!words.length && !bigrams.length) return "Word frequency data is not available — R pipeline was not reachable when this analysis ran.";
+      return `The dataset contains ${words.length} unique words and ${bigrams.length} unique bigrams. Word and bigram frequency can help identify key topics, recurring phrases, or common sentiment drivers.`;
     }
     default:
       return "";

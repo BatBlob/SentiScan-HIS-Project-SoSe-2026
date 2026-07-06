@@ -124,6 +124,7 @@ export type ThemeId =
   | "keywords"
   | "topics"
   | "trend"
-  | "confidence";
+  | "confidence"
+  | "wordanalysis";
 
 export type FilterChip = "all" | "Positive" | "Negative" | "Neutral";

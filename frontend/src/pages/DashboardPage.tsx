@@ -21,6 +21,7 @@ import { SarcasmPanel } from "../components/dashboard/themes/SarcasmPanel";
 import { TopicsPanel } from "../components/dashboard/themes/TopicsPanel";
 import { TrendPanel } from "../components/dashboard/themes/TrendPanel";
 import { THEMES, themeLabel } from "../constants/themes";
+import { WordAnalysisPanel } from "../components/dashboard/themes/WordAnalysisPanel";
 import type {
   Aggregates,
   EntryDocument,
@@ -216,6 +217,7 @@ export function DashboardPage() {
             {theme === "topics" && <TopicsPanel {...panelProps} />}
             {theme === "trend" && <TrendPanel {...panelProps} />}
             {theme === "confidence" && <ConfidencePanel {...panelProps} />}
+            {theme === "wordanalysis" && <WordAnalysisPanel {...panelProps} />}
           </div>
 
           <ExportBar onCsv={handleCsv} onPdf={handlePdf} />

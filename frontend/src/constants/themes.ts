@@ -8,6 +8,7 @@ export const THEMES = [
   { id: "topics" as const, num: "07", name: "Topic Modelling", icon: "🗂", bg: "#ffedd5" },
   { id: "trend" as const, num: "08", name: "Temporal Trend", icon: "📈", bg: "#d1fae5" },
   { id: "confidence" as const, num: "09", name: "Confidence Scoring", icon: "🎯", bg: "#f3f4f6" },
+  { id: "wordanalysis" as const, num: "10", name: "Word Analysis", icon: "🔤", bg: "#e0f2fe" },
 ];
 
 export const DIMENSIONS = [
