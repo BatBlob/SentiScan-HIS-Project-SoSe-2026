@@ -1,0 +1,51 @@
+raw_text,label,timestamp
+The lectures were excellent and very engaging.,pos,2025-01-06
+Too much workload for one semester.,neg,2025-01-09
+Professor explains concepts clearly.,pos,2025-01-11
+Assignment deadlines are overwhelming.,neg,2025-01-14
+Great course materials and helpful slides.,pos,2025-01-16
+Online platform was confusing at first.,neg,2025-01-19
+Feedback on assignments came back quickly.,pos,2025-01-21
+I learned a lot about data analysis.,pos,2025-01-24
+Grading criteria could be clearer.,neg,2025-01-27
+Best course I have taken this year.,pos,2025-01-29
+Group projects were poorly structured.,neg,2025-02-01
+Office hours were very supportive.,pos,2025-02-03
+Reading list was too long.,neg,2025-02-06
+Interactive exercises helped me understand R.,pos,2025-02-08
+Midterm was fair and well aligned with lectures.,pos,2025-02-11
+Could use more practical examples.,neutral,2025-02-14
+"Oh sure, the workload is totally manageable said no one ever.",neg,2025-02-16
+Discussion sessions were valuable.,pos,2025-02-19
+Some lecture recordings had audio issues.,neg,2025-02-21
+The final project was a good learning experience.,pos,2025-02-24
+Course pace was too fast in March.,neg,2025-02-26
+Peer review process worked well.,pos,2025-03-01
+Would recommend this course to others.,pos,2025-03-04
+Exam instructions were unclear.,neg,2025-03-06
+Tutorial assistants were helpful.,pos,2025-03-09
+Slides need better formatting.,neg,2025-03-11
+Love how the professor uses real-world datasets.,pos,2025-03-14
+Too many overlapping deadlines with other courses.,neg,2025-03-16
+Sentiment analysis module was fascinating.,pos,2025-03-19
+Moodle navigation is frustrating.,neg,2025-03-22
+Guest lecture on NLP was inspiring.,pos,2025-03-24
+Lab sessions should be longer.,neutral,2025-03-27
+Clear rubrics made grading transparent.,pos,2025-03-29
+Some topics felt rushed near the end.,neg,2025-04-01
+Fantastic introduction to text mining.,pos,2025-04-03
+Waiting two weeks for feedback is unacceptable.,neg,2025-04-06
+Course structure is logical and well organized.,pos,2025-04-09
+"Yes, I absolutely enjoy studying at 2am every week.",neg,2025-04-11
+More office hours would help before exams.,neutral,2025-04-14
+Collaborative tools worked smoothly.,pos,2025-04-16
+Textbook was optional but useful.,neutral,2025-04-19
+Assignments built skills progressively.,pos,2025-04-21
+Not enough guidance on the R project.,neg,2025-04-24
+Engaging discussions in every class.,pos,2025-04-27
+Course exceeded my expectations.,pos,2025-04-29
+Technical setup for remote students was poor.,neg,2025-05-02
+Would take another course with this professor.,pos,2025-05-04
+Assessment weighting felt unbalanced.,neg,2025-05-07
+Overall a solid and informative course.,pos,2025-05-09
+Need more examples of sentiment lexicons.,neutral,2025-05-12

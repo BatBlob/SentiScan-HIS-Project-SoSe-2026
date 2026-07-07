@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections import Counter, defaultdict
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
 from app.models.schemas import (
     Aggregates,
@@ -265,17 +265,69 @@ def _temporal_trend(
     ]
 
 
+_TIMESTAMP_FORMATS = [
+    # ISO / database
+    "%Y-%m-%dT%H:%M:%S",
+    "%Y-%m-%dT%H:%M:%SZ",
+    "%Y-%m-%dT%H:%M:%S.%f",
+    "%Y-%m-%d %H:%M:%S",
+    "%Y-%m-%d %H:%M",
+    "%Y-%m-%d",
+    # US style
+    "%m/%d/%Y %H:%M:%S",
+    "%m/%d/%Y %H:%M",
+    "%m/%d/%Y",
+    # Day-first style
+    "%d/%m/%Y %H:%M:%S",
+    "%d/%m/%Y %H:%M",
+    "%d/%m/%Y",
+    "%d-%m-%Y",
+    # Long month name
+    "%B %d, %Y",
+    "%b %d, %Y",
+    "%d %B %Y",
+    "%d %b %Y",
+]
+
+
 def _period_from_timestamp(raw: str) -> str | None:
     raw = raw.strip()
     if not raw:
         return None
-    for fmt in ("%Y-%m-%d", "%Y-%m-%dT%H:%M:%S", "%Y-%m-%d %H:%M:%S", "%m/%d/%Y"):
+
+    # Unix epoch (seconds or milliseconds) — pure integer string
+    if raw.isdigit():
+        ts = int(raw)
+        # milliseconds: value larger than year 2100 in seconds (~4102444800)
+        if ts > 4_102_444_800:
+            ts //= 1000
         try:
-            return datetime.strptime(raw[:19], fmt).strftime("%Y-%m")
+            return datetime.fromtimestamp(ts, tz=timezone.utc).strftime("%Y-%m")
+        except (OSError, OverflowError, ValueError):
+            return None
+
+    # Float epoch (e.g. "1303862400.0")
+    try:
+        ts_f = float(raw)
+        if ts_f > 4_102_444_800:
+            ts_f /= 1000
+        return datetime.fromtimestamp(ts_f, tz=timezone.utc).strftime("%Y-%m")
+    except ValueError:
+        pass
+
+    # String date formats — try against truncated value to tolerate extra chars
+    for fmt in _TIMESTAMP_FORMATS:
+        # use full raw for formats without time, truncate to 19 chars for datetime formats
+        candidate = raw[:19] if len(raw) > 10 else raw
+        try:
+            return datetime.strptime(candidate, fmt).strftime("%Y-%m")
         except ValueError:
             continue
+
+    # Last resort: if value starts with YYYY- grab first 7 chars
     if len(raw) >= 7 and raw[4] == "-":
         return raw[:7]
+
     return None
 
 

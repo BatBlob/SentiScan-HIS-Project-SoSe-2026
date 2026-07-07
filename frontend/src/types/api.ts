@@ -8,12 +8,20 @@ export interface DatasetUploadResponse {
   uploaded_at: string;
 }
 
+export interface RowRange {
+  start: number;
+  end: number;
+}
+
 export interface AnalysisConfig {
   dataset_id: string;
   text_column: string;
   timestamp_column?: string | null;
   is_labelled?: boolean;
   label_column?: string | null;
+  row_ranges?: RowRange[] | null;
+  /** null / omitted means all dimensions enabled */
+  enabled_dimensions?: string[] | null;
 }
 
 export interface AnalysisStartResponse {

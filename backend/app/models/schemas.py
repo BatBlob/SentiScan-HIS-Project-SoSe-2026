@@ -111,12 +111,20 @@ class DatasetUploadResponse(BaseModel):
     uploaded_at: datetime
 
 
+class RowRange(BaseModel):
+    start: int = Field(ge=1, description="1-based start row (inclusive)")
+    end: int = Field(ge=1, description="1-based end row (inclusive)")
+
+
 class AnalysisConfig(BaseModel):
     dataset_id: str
     text_column: str
     timestamp_column: str | None = None
     is_labelled: bool = False
     label_column: str | None = None
+    row_ranges: list[RowRange] | None = None
+    # None means all dimensions enabled; explicit list restricts to those IDs.
+    enabled_dimensions: list[str] | None = None
 
 
 class AnalysisStartResponse(BaseModel):

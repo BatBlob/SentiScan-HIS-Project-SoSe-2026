@@ -8,7 +8,7 @@ from app.models.schemas import (
     EntryDocument,
     JobStatus,
 )
-from app.services.ingestion import load_csv_rows, validate_text_column
+from app.services.ingestion import filter_row_ranges, load_csv_rows, validate_text_column
 from app.services.ml_client import get_absa_predictions, get_polarity_predictions
 from app.services.pipeline_assembler import assemble_analysis_output, build_r_documents
 from app.services.r_client import get_r_analysis
@@ -61,8 +61,21 @@ async def run_analysis_job(job_id: str) -> None:
         encoding="utf-8",
     )
 
+    # Determine which optional service calls are needed.
+    # None means all dimensions enabled; an explicit list restricts execution.
+    enabled = set(config.enabled_dimensions) if config.enabled_dimensions is not None else None
+
+    def _needs(*dims: str) -> bool:
+        return enabled is None or bool(enabled & set(dims))
+
+    run_absa = _needs("aspect", "intent")
+    run_r = _needs("emotion", "keywords", "topics", "wordanalysis")
+
     try:
         rows = load_csv_rows(dataset["file_path"])
+        if config.row_ranges:
+            ranges_raw = [r.model_dump() for r in config.row_ranges]
+            rows = filter_row_ranges(rows, ranges_raw)
         texts = [str(row.get(config.text_column, "")) for row in rows]
 
         await repository.update_job(
@@ -72,28 +85,34 @@ async def run_analysis_job(job_id: str) -> None:
         )
         ml_predictions = await get_polarity_predictions(texts)
 
-        await repository.update_job(
-            job_id,
-            progress=35,
-            message="Running ABSA and intent detection",
-        )
-        absa_predictions = await get_absa_predictions(texts)
+        if run_absa:
+            await repository.update_job(
+                job_id,
+                progress=35,
+                message="Running ABSA and intent detection",
+            )
+            absa_predictions = await get_absa_predictions(texts)
+        else:
+            absa_predictions = []
 
-        documents = build_r_documents(
-            rows,
-            text_column=config.text_column,
-            is_labelled=config.is_labelled,
-            label_column=config.label_column,
-        )
-
-        await repository.update_job(
-            job_id,
-            progress=50,
-            message="Running R aggregate analysis",
-        )
-        r_result = await get_r_analysis(documents)
-        r_response = r_result.data
-        r_pipeline_error = r_result.error
+        if run_r:
+            documents = build_r_documents(
+                rows,
+                text_column=config.text_column,
+                is_labelled=config.is_labelled,
+                label_column=config.label_column,
+            )
+            await repository.update_job(
+                job_id,
+                progress=50,
+                message="Running R aggregate analysis",
+            )
+            r_result = await get_r_analysis(documents)
+            r_response = r_result.data
+            r_pipeline_error = r_result.error
+        else:
+            r_response = None
+            r_pipeline_error = None
 
         await repository.update_job(
             job_id,

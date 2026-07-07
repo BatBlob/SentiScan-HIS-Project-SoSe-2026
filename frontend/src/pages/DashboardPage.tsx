@@ -2,12 +2,12 @@ import { useCallback, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import {
   exportCsv,
-  exportPdf,
   getEntries,
   getSummary,
   loadSessionMeta,
   updateSettings,
 } from "../api/client";
+import { openPdfReport } from "../utils/pdfReport";
 import { ExportBar } from "../components/dashboard/ExportBar";
 import { FilterBar } from "../components/dashboard/FilterBar";
 import { ThemeSidebar } from "../components/dashboard/ThemeSidebar";
@@ -21,6 +21,9 @@ import { SarcasmPanel } from "../components/dashboard/themes/SarcasmPanel";
 import { TopicsPanel } from "../components/dashboard/themes/TopicsPanel";
 import { TrendPanel } from "../components/dashboard/themes/TrendPanel";
 import { THEMES, themeLabel } from "../constants/themes";
+
+// Panels where the polarity filter actually changes visible entry-level content.
+const FILTERABLE_THEMES = new Set<ThemeId>(["finegrained", "confidence", "aspect", "intent"]);
 import { WordAnalysisPanel } from "../components/dashboard/themes/WordAnalysisPanel";
 import type {
   Aggregates,
@@ -116,20 +119,20 @@ export function DashboardPage() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `sentiscan_${jobId.slice(0, 8)}.csv`;
+      a.download = `sentiscan_${jobId.slice(0, 8)}_annotated.csv`;
+      document.body.appendChild(a);
       a.click();
+      document.body.removeChild(a);
       URL.revokeObjectURL(url);
+      setToast("CSV downloaded");
     } catch (e) {
       setToast(e instanceof Error ? e.message : "Export failed");
     }
   };
 
-  const handlePdf = async () => {
-    try {
-      await exportPdf(jobId);
-    } catch (e) {
-      setToast(e instanceof Error ? e.message : "PDF export failed");
-    }
+  const handlePdf = () => {
+    if (!summary) return;
+    openPdfReport(summary, entries, meta);
   };
 
   const themeIndex = THEMES.findIndex((t) => t.id === theme);
@@ -194,12 +197,14 @@ export function DashboardPage() {
             </div>
           </div>
 
-          <FilterBar
-            active={filter}
-            onFilter={handleFilter}
-            excludeSarcasm={excludeSarcasm}
-            onToggleSarcasm={handleSarcasmToggle}
-          />
+          {FILTERABLE_THEMES.has(theme) && (
+            <FilterBar
+              active={filter}
+              onFilter={handleFilter}
+              excludeSarcasm={excludeSarcasm}
+              onToggleSarcasm={handleSarcasmToggle}
+            />
+          )}
 
           <div className={`theme-panel active`}>
             {theme === "finegrained" && <FineGrainedPanel {...panelProps} />}

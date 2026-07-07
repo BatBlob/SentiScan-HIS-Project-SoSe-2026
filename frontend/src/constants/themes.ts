@@ -11,6 +11,7 @@ export const THEMES = [
   { id: "wordanalysis" as const, num: "10", name: "Word Analysis", icon: "🔤", bg: "#e0f2fe" },
 ];
 
+/** @deprecated use DIMENSION_CONFIG instead */
 export const DIMENSIONS = [
   "01. Fine-grained polarity",
   "02. Aspect-based sentiment",
@@ -22,6 +23,28 @@ export const DIMENSIONS = [
   "08. Temporal trend",
   "09. Confidence scoring",
 ];
+
+/**
+ * group:
+ *   "ml"   — always runs (core ML polarity call, fast)
+ *   "absa" — optional ABSA/intent call
+ *   "r"    — optional R pipeline call (slowest)
+ * locked: cannot be disabled by the user
+ */
+export const DIMENSION_CONFIG = [
+  { id: "finegrained", num: "01", label: "Fine-grained polarity", group: "ml" as const, locked: true },
+  { id: "aspect",      num: "02", label: "Aspect-based sentiment", group: "absa" as const, locked: false },
+  { id: "emotion",     num: "03", label: "Emotion detection",      group: "r" as const,    locked: false },
+  { id: "intent",      num: "04", label: "Intent classification",  group: "absa" as const, locked: false },
+  { id: "sarcasm",     num: "05", label: "Sarcasm detection",      group: "ml" as const,   locked: false },
+  { id: "keywords",    num: "06", label: "High-value keyword scoring", group: "r" as const, locked: false },
+  { id: "topics",      num: "07", label: "Topic modelling",        group: "r" as const,    locked: false },
+  { id: "trend",       num: "08", label: "Temporal trend",         group: "ml" as const,   locked: false },
+  { id: "confidence",  num: "09", label: "Confidence scoring",     group: "ml" as const,   locked: false },
+] as const;
+
+export type DimensionId = typeof DIMENSION_CONFIG[number]["id"];
+export const ALL_DIMENSION_IDS: DimensionId[] = DIMENSION_CONFIG.map((d) => d.id);
 
 export function themeLabel(id: string): string {
   return THEMES.find((t) => t.id === id)?.name ?? id;

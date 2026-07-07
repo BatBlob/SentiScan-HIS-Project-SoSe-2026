@@ -124,6 +124,29 @@ def validate_text_column(columns: list[str], text_column: str) -> None:
         )
 
 
+def filter_row_ranges(
+    rows: list[dict[str, Any]],
+    ranges: list[dict[str, int]] | None,
+) -> list[dict[str, Any]]:
+    """
+    Subset rows by 1-based row ranges.
+    E.g. ranges=[{"start": 1, "end": 50}, {"start": 100, "end": 150}]
+    keeps rows at 1-based positions 1-50 and 100-150.
+    Ranges are deduplicated and merged so rows are never duplicated.
+    """
+    if not ranges:
+        return rows
+
+    n = len(rows)
+    keep: set[int] = set()
+    for r in ranges:
+        start = max(1, int(r["start"]))
+        end = min(n, int(r["end"]))
+        keep.update(range(start - 1, end))
+
+    return [rows[i] for i in sorted(keep)]
+
+
 def load_csv_rows(file_path: str) -> list[dict[str, Any]]:
     path = Path(file_path)
     content = path.read_bytes()

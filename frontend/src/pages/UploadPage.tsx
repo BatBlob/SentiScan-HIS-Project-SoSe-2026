@@ -2,6 +2,8 @@ import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getJobStatus, saveSessionMeta, startAnalysis, uploadDataset } from "../api/client";
 import { ConfigGrid, StepsRow, UploadZone } from "../components/upload/UploadForm";
+import { ALL_DIMENSION_IDS, type DimensionId } from "../constants/themes";
+import type { RowRange } from "../types/api";
 
 export function UploadPage() {
   const navigate = useNavigate();
@@ -13,6 +15,8 @@ export function UploadPage() {
   const [textColumn, setTextColumn] = useState("");
   const [timestampColumn, setTimestampColumn] = useState("");
   const [hasTimestamp, setHasTimestamp] = useState(true);
+  const [rowRanges, setRowRanges] = useState<RowRange[]>([]);
+  const [enabledDimensions, setEnabledDimensions] = useState<DimensionId[]>([...ALL_DIMENSION_IDS]);
   const [error, setError] = useState("");
   const [uploading, setUploading] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
@@ -54,11 +58,14 @@ export function UploadPage() {
     setAnalyzing(true);
     setStep(3);
     try {
+      const allEnabled = enabledDimensions.length === ALL_DIMENSION_IDS.length;
       const { job_id } = await startAnalysis({
         dataset_id: datasetId,
         text_column: textColumn,
         timestamp_column: hasTimestamp && timestampColumn ? timestampColumn : null,
         is_labelled: false,
+        row_ranges: rowRanges.length > 0 ? rowRanges : null,
+        enabled_dimensions: allEnabled ? null : enabledDimensions,
       });
       saveSessionMeta(job_id, { filename, row_count: rowCount, dataset_id: datasetId });
 
@@ -107,12 +114,17 @@ export function UploadPage() {
         {columns.length > 0 && (
           <ConfigGrid
             columns={columns}
+            rowCount={rowCount}
             textColumn={textColumn}
             timestampColumn={timestampColumn}
             hasTimestamp={hasTimestamp}
+            rowRanges={rowRanges}
+            enabledDimensions={enabledDimensions}
             onTextColumn={setTextColumn}
             onTimestampColumn={setTimestampColumn}
             onHasTimestamp={setHasTimestamp}
+            onRowRanges={setRowRanges}
+            onEnabledDimensions={setEnabledDimensions}
           />
         )}
 
