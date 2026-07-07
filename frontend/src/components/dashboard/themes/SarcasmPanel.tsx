@@ -7,8 +7,6 @@ interface Props {
   aggregates: Aggregates;
   entries: EntryDocument[];
   totalEntries: number;
-  onExcludeToggle: () => void;
-  excludeSarcasm: boolean;
   rPipelineError?: string | null;
 }
 
@@ -16,8 +14,6 @@ export function SarcasmPanel({
   aggregates,
   entries,
   totalEntries,
-  onExcludeToggle,
-  excludeSarcasm,
   rPipelineError,
 }: Props) {
   const flagged = entries.filter((e) => e.sarcasm_flag);
@@ -65,20 +61,11 @@ export function SarcasmPanel({
           { label: "flagged entries", value: sarcasmCount },
           { label: "of total dataset", value: `${pct}%` },
           { label: "avg confidence", value: `${avgConf}%` },
-          { label: "excluded from aggregates", value: excludeSarcasm ? "Yes" : "No" },
         ].map((p) => (
           <div key={p.label} className="pill">
             <strong>{p.value}</strong> {p.label}
           </div>
         ))}
-        <button
-          type="button"
-          className="btn"
-          style={{ marginLeft: "auto" }}
-          onClick={onExcludeToggle}
-        >
-          {excludeSarcasm ? "Include sarcasm in aggregates" : "Exclude sarcasm from aggregates"}
-        </button>
       </div>
 
       {!hasData ? (

@@ -23,10 +23,10 @@ export function TrendPanel({ aggregates, entries, totalEntries }: Props) {
   }
 
   const width = 820;
-  const height = 120;
+  const height = 140;
   const padX = 40;
   const padY = 20;
-  const chartH = height - padY - 25;
+  const chartH = height - padY - 35;
   const step = (width - padX * 2) / Math.max(trend.length - 1, 1);
 
   const toY = (v: number) => padY + chartH / 2 - v * (chartH / 2);
@@ -42,12 +42,16 @@ export function TrendPanel({ aggregates, entries, totalEntries }: Props) {
   const spikeX = padX + minIdx * step;
   const spikeY = toY(trend[minIdx].avg_polarity);
 
+  // Show at most MAX_LABELS evenly-spaced labels so they never overlap
+  const MAX_LABELS = 12;
+  const labelEvery = Math.ceil(trend.length / MAX_LABELS);
+
   return (
     <>
       <AiInsightBox theme="trend" aggregates={aggregates} entries={entries} totalEntries={totalEntries} />
       <div className="card">
         <h3>Sentiment Over Time</h3>
-        <svg className="trend" viewBox={`0 0 ${width} ${height}`} height={130}>
+        <svg className="trend" viewBox={`0 0 ${width} ${height}`} height={150}>
           <line x1="0" y1="20" x2={width} y2="20" stroke="#f0f0f0" strokeWidth="1" />
           <line x1="0" y1="55" x2={width} y2="55" stroke="#f0f0f0" strokeWidth="1" />
           <line x1="0" y1="90" x2={width} y2="90" stroke="#f0f0f0" strokeWidth="1" />
@@ -64,16 +68,34 @@ export function TrendPanel({ aggregates, entries, totalEntries }: Props) {
               </text>
             </>
           )}
-          {trend.map((p, i) => (
-            <text key={p.period} x={padX + i * step - 15} y="115" fontSize="9" fill="#bbb" fontFamily="sans-serif">
-              {p.period}
-            </text>
-          ))}
+          {trend.map((p, i) => {
+            if (i % labelEvery !== 0 && i !== trend.length - 1) return null;
+            const x = padX + i * step;
+            return (
+              <text
+                key={p.period}
+                x={x}
+                y={height - 4}
+                fontSize="9"
+                fill="#bbb"
+                fontFamily="sans-serif"
+                textAnchor="middle"
+                transform={`rotate(-35, ${x}, ${height - 4})`}
+              >
+                {p.period}
+              </text>
+            );
+          })}
         </svg>
         <div style={{ display: "flex", gap: 16, marginTop: 4, fontSize: 11, color: "#888" }}>
           <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
             <span style={{ width: 14, height: 2, background: "#22c55e", display: "inline-block" }} /> Avg polarity
           </span>
+          {trend.length > MAX_LABELS && (
+            <span style={{ color: "#bbb" }}>
+              {trend.length} data points — showing every {labelEvery} labels
+            </span>
+          )}
         </div>
       </div>
     </>

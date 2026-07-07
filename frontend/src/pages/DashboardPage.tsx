@@ -5,7 +5,6 @@ import {
   getEntries,
   getSummary,
   loadSessionMeta,
-  updateSettings,
 } from "../api/client";
 import { openPdfReport } from "../utils/pdfReport";
 import { ExportBar } from "../components/dashboard/ExportBar";
@@ -40,7 +39,6 @@ export function DashboardPage() {
   const [totalEntries, setTotalEntries] = useState(0);
   const [theme, setTheme] = useState<ThemeId>("finegrained");
   const [filter, setFilter] = useState<FilterChip>("all");
-  const [excludeSarcasm, setExcludeSarcasm] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [toast, setToast] = useState("");
@@ -100,18 +98,6 @@ export function DashboardPage() {
     }
   };
 
-  const handleSarcasmToggle = async () => {
-    const next = !excludeSarcasm;
-    try {
-      await updateSettings(jobId, !next);
-      setExcludeSarcasm(next);
-      const sum = await getSummary(jobId);
-      setSummary(sum);
-      setToast(next ? "Sarcasm excluded from aggregates" : "Sarcasm included in aggregates");
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Settings update failed");
-    }
-  };
 
   const handleCsv = async () => {
     try {
@@ -210,11 +196,7 @@ export function DashboardPage() {
             {theme === "emotion" && <EmotionPanel {...panelProps} />}
             {theme === "intent" && <IntentPanel {...panelProps} />}
             {theme === "sarcasm" && (
-              <SarcasmPanel
-                {...panelProps}
-                excludeSarcasm={excludeSarcasm}
-                onExcludeToggle={handleSarcasmToggle}
-              />
+              <SarcasmPanel {...panelProps} />
             )}
             {theme === "keywords" && <KeywordsPanel {...panelProps} />}
             {theme === "topics" && <TopicsPanel {...panelProps} />}
