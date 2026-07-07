@@ -68,7 +68,6 @@ export function DashboardPage() {
         getEntries(jobId, { sarcasm: true, limit: 100 }),
       ]);
       setSummary(sum);
-      setExcludeSarcasm(!sum.include_sarcasm_in_aggregates);
       setEntries(entAll.entries);
       setTotalEntries(entAll.total);
       if (entSarc.entries.length) {
