@@ -3,8 +3,6 @@ import type { FilterChip } from "../../types/api";
 interface FilterBarProps {
   active: FilterChip;
   onFilter: (chip: FilterChip) => void;
-  excludeSarcasm: boolean;
-  onToggleSarcasm: () => void;
 }
 
 const CHIPS: { id: FilterChip; label: string }[] = [
@@ -14,7 +12,7 @@ const CHIPS: { id: FilterChip; label: string }[] = [
   { id: "Neutral", label: "Neutral" },
 ];
 
-export function FilterBar({ active, onFilter, excludeSarcasm, onToggleSarcasm }: FilterBarProps) {
+export function FilterBar({ active, onFilter }: FilterBarProps) {
   return (
     <div className="filter-bar">
       <span className="filter-label">Filter:</span>
@@ -28,17 +26,6 @@ export function FilterBar({ active, onFilter, excludeSarcasm, onToggleSarcasm }:
           {chip.label}
         </button>
       ))}
-      <div className="toggle-wrap">
-        Exclude sarcasm
-        <div
-          className={`toggle${excludeSarcasm ? " on" : ""}`}
-          onClick={onToggleSarcasm}
-          onKeyDown={(e) => e.key === "Enter" && onToggleSarcasm()}
-          role="switch"
-          aria-checked={excludeSarcasm}
-          tabIndex={0}
-        />
-      </div>
     </div>
   );
 }

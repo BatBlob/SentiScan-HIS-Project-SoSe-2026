@@ -109,6 +109,7 @@ class DatasetUploadResponse(BaseModel):
     row_count: int
     columns: list[str]
     uploaded_at: datetime
+    max_rows: int = 500  # pipeline row limit — frontend uses this to auto-apply ranges
 
 
 class RowRange(BaseModel):

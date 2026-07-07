@@ -6,6 +6,7 @@ export interface DatasetUploadResponse {
   row_count: number;
   columns: string[];
   uploaded_at: string;
+  max_rows: number;
 }
 
 export interface RowRange {

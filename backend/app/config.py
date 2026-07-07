@@ -15,7 +15,7 @@ class Settings(BaseSettings):
     upload_dir: str = "../uploads"
     r_script_path: str = "../r-engine/run_analysis.R"
     r_executable: str = "Rscript"
-    max_rows: int = 10000
+    max_rows: int = 500
     cors_origins: str = "http://localhost:5173,http://localhost:3000"
     ml_model_url: str = "https://sentimentanalysisrhis-production.up.railway.app"
     r_plumber_url: str = "http://localhost:8080"

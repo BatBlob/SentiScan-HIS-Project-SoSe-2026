@@ -44,7 +44,7 @@ def _looks_like_headerless_two_column(row: list[str]) -> bool:
     return True
 
 
-def _parse_headerless_rows(text: str) -> tuple[list[str], list[dict[str, Any]]]:
+def _parse_headerless_rows(text: str, limit: int | None = None) -> tuple[list[str], list[dict[str, Any]]]:
     columns = ["raw_text", "label"]
     rows: list[dict[str, Any]] = []
     reader = csv.reader(io.StringIO(text))
@@ -56,12 +56,19 @@ def _parse_headerless_rows(text: str) -> tuple[list[str], list[dict[str, Any]]]:
         if not raw_text and not label:
             continue
         rows.append({"raw_text": raw_text, "label": label})
-        if len(rows) >= settings.max_rows:
+        if limit is not None and len(rows) >= limit:
             break
     return columns, rows
 
 
-def parse_csv(content: bytes) -> tuple[list[str], list[dict[str, Any]]]:
+def parse_csv(content: bytes, limit: int | None = None) -> tuple[list[str], list[dict[str, Any]]]:
+    """Parse CSV bytes into (columns, rows).
+
+    limit: if given, stop reading after this many data rows.
+           Pass settings.max_rows at upload time to enforce the cap.
+           Pass None when loading a previously-validated file so that
+           row-range selectors can reference any row in the full file.
+    """
     text = _decode_content(content)
     peek = csv.reader(io.StringIO(text))
     first_row = next(peek, None)
@@ -69,7 +76,7 @@ def parse_csv(content: bytes) -> tuple[list[str], list[dict[str, Any]]]:
         raise HTTPException(status_code=400, detail="CSV is empty")
 
     if _looks_like_headerless_two_column(first_row):
-        columns, rows = _parse_headerless_rows(text)
+        columns, rows = _parse_headerless_rows(text, limit=limit)
     else:
         reader = csv.DictReader(io.StringIO(text))
         if not reader.fieldnames:
@@ -81,8 +88,8 @@ def parse_csv(content: bytes) -> tuple[list[str], list[dict[str, Any]]]:
             cleaned = {k.strip(): (v.strip() if isinstance(v, str) else v) for k, v in row.items() if k}
             if any(cleaned.values()):
                 rows.append(cleaned)
-            if len(rows) >= settings.max_rows:
-                break
+                if limit is not None and len(rows) >= limit:
+                    break
 
     if not rows:
         raise HTTPException(status_code=400, detail="CSV contains no data rows")
@@ -90,7 +97,17 @@ def parse_csv(content: bytes) -> tuple[list[str], list[dict[str, Any]]]:
     return columns, rows
 
 
-async def save_upload(file: UploadFile) -> tuple[str, Path, list[str], list[dict[str, Any]]]:
+async def save_upload(
+    file: UploadFile,
+) -> tuple[str, Path, list[str], list[dict[str, Any]], int]:
+    """Save an uploaded CSV and return (filename, path, columns, preview_rows, total_row_count).
+
+    Files of any row count are accepted — the hard limit is enforced later at
+    analysis time (in analysis_runner) so that users can use row-range selectors
+    to pick at most max_rows rows from a larger file.
+    A fast two-pass approach is used: first count all rows cheaply, then parse
+    only the first max_rows rows for the preview / column detection.
+    """
     if not file.filename or not file.filename.lower().endswith(".csv"):
         raise HTTPException(status_code=400, detail="Only CSV files are supported")
 
@@ -98,12 +115,19 @@ async def save_upload(file: UploadFile) -> tuple[str, Path, list[str], list[dict
     if not content:
         raise HTTPException(status_code=400, detail="Uploaded file is empty")
 
-    columns, rows = parse_csv(content)
-    if len(rows) > settings.max_rows:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Dataset exceeds maximum of {settings.max_rows} rows",
-        )
+    # Count actual rows without storing them all
+    text_for_count = _decode_content(content)
+    reader_count = csv.DictReader(io.StringIO(text_for_count))
+    if not reader_count.fieldnames:
+        raise HTTPException(status_code=400, detail="CSV has no header row")
+    total_row_count = sum(
+        1 for row in reader_count if any(v and v.strip() for v in row.values())
+    )
+    if total_row_count == 0:
+        raise HTTPException(status_code=400, detail="CSV contains no data rows")
+
+    # Parse up to max_rows for column detection / preview only
+    columns, preview_rows = parse_csv(content, limit=settings.max_rows)
 
     safe_name = Path(file.filename).name.replace(" ", "_")
     dest = settings.upload_path / safe_name
@@ -113,7 +137,7 @@ async def save_upload(file: UploadFile) -> tuple[str, Path, list[str], list[dict
         counter += 1
 
     dest.write_bytes(content)
-    return file.filename, dest, columns, rows
+    return file.filename, dest, columns, preview_rows, total_row_count
 
 
 def validate_text_column(columns: list[str], text_column: str) -> None:
@@ -148,7 +172,12 @@ def filter_row_ranges(
 
 
 def load_csv_rows(file_path: str) -> list[dict[str, Any]]:
+    """Load all rows from a previously uploaded (already-validated) CSV file.
+
+    No row limit is applied here — the file was already checked against
+    max_rows at upload time, so row-range selectors can reference any row.
+    """
     path = Path(file_path)
     content = path.read_bytes()
-    _, rows = parse_csv(content)
+    _, rows = parse_csv(content, limit=None)
     return rows

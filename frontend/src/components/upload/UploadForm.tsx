@@ -30,7 +30,7 @@ export function UploadZone({ onFile, filename, error, disabled }: UploadZoneProp
       >
         <div style={{ fontSize: 26, color: "#bbb", marginBottom: 10 }}>⬆</div>
         <div className="upload-title">Upload your document</div>
-        <div className="upload-sub">.csv · Max 10,000 rows</div>
+        <div className="upload-sub">.csv · Max 500 rows</div>
         {filename ? (
           <div style={{ fontSize: 12, color: "#16a34a", marginBottom: 12 }}>Selected: {filename}</div>
         ) : null}
@@ -52,14 +52,27 @@ export function UploadZone({ onFile, filename, error, disabled }: UploadZoneProp
 
 interface RowRangeSelectorProps {
   rowCount: number;
+  maxRows: number;
   ranges: RowRange[];
   onChange: (ranges: RowRange[]) => void;
 }
 
-export function RowRangeSelector({ rowCount, ranges, onChange }: RowRangeSelectorProps) {
+function countSelectedRows(ranges: RowRange[], rowCount: number): number {
+  if (ranges.length === 0) return rowCount;
+  const keep = new Set<number>();
+  for (const r of ranges) {
+    for (let i = r.start; i <= Math.min(r.end, rowCount || r.end); i++) keep.add(i);
+  }
+  return keep.size;
+}
+
+export function RowRangeSelector({ rowCount, maxRows, ranges, onChange }: RowRangeSelectorProps) {
   const [draftStart, setDraftStart] = useState("");
   const [draftEnd, setDraftEnd] = useState("");
   const [err, setErr] = useState("");
+
+  const selectedCount = countSelectedRows(ranges, rowCount);
+  const overLimit = selectedCount > maxRows;
 
   const addRange = () => {
     const s = parseInt(draftStart, 10);
@@ -68,8 +81,15 @@ export function RowRangeSelector({ rowCount, ranges, onChange }: RowRangeSelecto
     if (s < 1) { setErr("Start must be ≥ 1."); return; }
     if (e < s) { setErr("End must be ≥ start."); return; }
     if (rowCount > 0 && s > rowCount) { setErr(`Start exceeds dataset size (${rowCount} rows).`); return; }
+    const newRange = { start: s, end: Math.min(e, rowCount || e) };
+    const newRanges = [...ranges, newRange];
+    const newCount = countSelectedRows(newRanges, rowCount);
+    if (newCount > maxRows) {
+      setErr(`This range would select ${newCount} rows total, exceeding the limit of ${maxRows}. Reduce the range.`);
+      return;
+    }
     setErr("");
-    onChange([...ranges, { start: s, end: Math.min(e, rowCount || e) }]);
+    onChange(newRanges);
     setDraftStart("");
     setDraftEnd("");
   };
@@ -78,9 +98,16 @@ export function RowRangeSelector({ rowCount, ranges, onChange }: RowRangeSelecto
 
   return (
     <div style={{ marginTop: 10 }}>
-      <div className="field-label">Row ranges to include (optional)</div>
+      <div className="field-label" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <span>Row ranges to include {rowCount > maxRows ? <span style={{ color: "#dc2626", fontWeight: 600 }}>(required — file exceeds limit)</span> : "(optional)"}</span>
+        <span style={{ fontSize: 11, color: overLimit ? "#dc2626" : "#888", fontWeight: overLimit ? 700 : 400 }}>
+          {selectedCount} / {maxRows} rows selected
+        </span>
+      </div>
       <div style={{ fontSize: 11, color: "#888", marginBottom: 6 }}>
-        Leave empty to use all rows. Add multiple ranges, e.g. 1–100 and 250–350.
+        {rowCount > maxRows
+          ? `File has ${rowCount} rows. Pipeline limit is ${maxRows} — select up to ${maxRows} rows using ranges below.`
+          : `Leave empty to use all rows. Add multiple ranges, e.g. 1–100 and 250–350.`}
       </div>
       <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
         <input
@@ -107,6 +134,11 @@ export function RowRangeSelector({ rowCount, ranges, onChange }: RowRangeSelecto
         </button>
       </div>
       {err && <div style={{ fontSize: 11, color: "#dc2626", marginTop: 4 }}>{err}</div>}
+      {overLimit && !err && (
+        <div style={{ fontSize: 11, color: "#dc2626", marginTop: 4 }}>
+          ⚠ Total selected rows ({selectedCount}) exceed the pipeline limit of {maxRows}. Remove or shrink ranges.
+        </div>
+      )}
       {ranges.length > 0 && (
         <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 8 }}>
           {ranges.map((r, i) => (
@@ -145,6 +177,7 @@ export function RowRangeSelector({ rowCount, ranges, onChange }: RowRangeSelecto
 interface ConfigGridProps {
   columns: string[];
   rowCount: number;
+  maxRows: number;
   textColumn: string;
   timestampColumn: string;
   hasTimestamp: boolean;
@@ -160,6 +193,7 @@ interface ConfigGridProps {
 export function ConfigGrid({
   columns,
   rowCount,
+  maxRows,
   textColumn,
   timestampColumn,
   hasTimestamp,
@@ -205,7 +239,7 @@ export function ConfigGrid({
             </select>
           </>
         )}
-        <RowRangeSelector rowCount={rowCount} ranges={rowRanges} onChange={onRowRanges} />
+        <RowRangeSelector rowCount={rowCount} maxRows={maxRows} ranges={rowRanges} onChange={onRowRanges} />
       </div>
       <div className="config-box">
         <h3>Analysis Dimensions</h3>

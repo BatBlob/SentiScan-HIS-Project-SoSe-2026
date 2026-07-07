@@ -16,6 +16,7 @@ export function UploadPage() {
   const [timestampColumn, setTimestampColumn] = useState("");
   const [hasTimestamp, setHasTimestamp] = useState(true);
   const [rowRanges, setRowRanges] = useState<RowRange[]>([]);
+  const [maxRows, setMaxRows] = useState(500);
   const [enabledDimensions, setEnabledDimensions] = useState<DimensionId[]>([...ALL_DIMENSION_IDS]);
   const [error, setError] = useState("");
   const [uploading, setUploading] = useState(false);
@@ -36,6 +37,10 @@ export function UploadPage() {
       setFilename(res.filename);
       setRowCount(res.row_count);
       setColumns(res.columns);
+      const limit = res.max_rows ?? 500;
+      setMaxRows(limit);
+      // Auto-apply default range when the file exceeds the pipeline limit
+      setRowRanges(res.row_count > limit ? [{ start: 1, end: limit }] : []);
       const textGuess = res.columns.find((c) => /text|comment|review|body|content/i.test(c)) ?? res.columns[0] ?? "";
       const dateGuess = res.columns.find((c) => /date|time|created|timestamp/i.test(c)) ?? "";
       setTextColumn(textGuess);
@@ -49,9 +54,25 @@ export function UploadPage() {
     }
   }, []);
 
+  // Count unique rows selected across all ranges (same de-dup logic as backend)
+  const selectedRowCount = (() => {
+    if (rowRanges.length === 0) return rowCount;
+    const keep = new Set<number>();
+    for (const r of rowRanges) {
+      for (let i = r.start; i <= Math.min(r.end, rowCount); i++) keep.add(i);
+    }
+    return keep.size;
+  })();
+
+  const rangeOverLimit = selectedRowCount > maxRows;
+
   const runAnalysis = async () => {
     if (!datasetId || !textColumn) {
       setError("Select a text column before running analysis.");
+      return;
+    }
+    if (rangeOverLimit) {
+      setError(`Selected rows (${selectedRowCount}) exceed the pipeline limit of ${maxRows}. Adjust your row ranges.`);
       return;
     }
     setError("");
@@ -111,10 +132,21 @@ export function UploadPage() {
 
         <UploadZone onFile={handleFile} filename={filename} error={undefined} disabled={uploading || analyzing} />
 
+        {rowCount > maxRows && columns.length > 0 && (
+          <div style={{
+            background: "#fffbeb", border: "1px solid #fcd34d", borderRadius: 6,
+            padding: "8px 14px", fontSize: 12, color: "#92400e", marginTop: 8,
+          }}>
+            <strong>Large file detected</strong> — {rowCount} rows found, pipeline limit is {maxRows}.
+            A default range of rows 1–{maxRows} has been applied. You can edit or add ranges below.
+          </div>
+        )}
+
         {columns.length > 0 && (
           <ConfigGrid
             columns={columns}
             rowCount={rowCount}
+            maxRows={maxRows}
             textColumn={textColumn}
             timestampColumn={timestampColumn}
             hasTimestamp={hasTimestamp}
@@ -138,6 +170,11 @@ export function UploadPage() {
         )}
 
         {error && <div className="error-msg">{error}</div>}
+        {rangeOverLimit && !error && (
+          <div className="error-msg">
+            Selected rows ({selectedRowCount}) exceed the pipeline limit of {maxRows}. Adjust row ranges before running.
+          </div>
+        )}
 
         <div className="form-actions">
           <button type="button" className="btn" onClick={() => navigate("/")} disabled={analyzing}>
@@ -146,7 +183,7 @@ export function UploadPage() {
           <button
             type="button"
             className="btn btn-dark"
-            disabled={!datasetId || !textColumn || analyzing || uploading}
+            disabled={!datasetId || !textColumn || analyzing || uploading || rangeOverLimit}
             onClick={runAnalysis}
           >
             Run Analysis →

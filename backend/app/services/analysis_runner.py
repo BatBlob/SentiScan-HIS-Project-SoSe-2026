@@ -76,6 +76,14 @@ async def run_analysis_job(job_id: str) -> None:
         if config.row_ranges:
             ranges_raw = [r.model_dump() for r in config.row_ranges]
             rows = filter_row_ranges(rows, ranges_raw)
+
+        if len(rows) > settings.max_rows:
+            raise ValueError(
+                f"Selected row range contains {len(rows)} rows, "
+                f"which exceeds the pipeline limit of {settings.max_rows}. "
+                f"Adjust your row ranges so the total is at most {settings.max_rows} rows."
+            )
+
         texts = [str(row.get(config.text_column, "")) for row in rows]
 
         await repository.update_job(

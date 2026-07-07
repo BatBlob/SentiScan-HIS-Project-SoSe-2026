@@ -201,8 +201,6 @@ export function DashboardPage() {
             <FilterBar
               active={filter}
               onFilter={handleFilter}
-              excludeSarcasm={excludeSarcasm}
-              onToggleSarcasm={handleSarcasmToggle}
             />
           )}
 
