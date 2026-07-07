@@ -19,10 +19,12 @@ export function formatIntent(intent: string): string {
 export function formatEmotion(key: string): string {
   const map: Record<string, string> = {
     happiness: "Joy",
+    trust: "Trust",
     sadness: "Sadness",
     anger: "Anger",
     fear: "Fear",
     surprise: "Surprise",
+    anticipation: "Anticipation",
     disgust: "Disgust",
   };
   return map[key] ?? key;

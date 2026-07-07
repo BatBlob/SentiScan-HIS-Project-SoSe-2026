@@ -461,10 +461,12 @@ body {
   .bar-neg   { background: #fca5a5; }
   .bar-vneg  { background: #dc2626; }
   .bar-joy   { background: #fbbf24; }
+  .bar-trust { background: #4ade80; }
   .bar-sad   { background: #60a5fa; }
   .bar-ang   { background: #ef4444; }
   .bar-fear  { background: #a78bfa; }
-  .bar-surp  { background: #34d399; }
+  .bar-surp  { background: #38bdf8; }
+  .bar-antic { background: #f472b6; }
   .bar-disg  { background: #fb923c; }
   .bar-comp  { background: #f87171; }
   .bar-sug   { background: #60a5fa; }

@@ -50,7 +50,12 @@ export function generateInsight(
     case "emotion": {
       const emo = aggregates.emotion_distribution;
       if (Object.keys(emo).length === 0) return "Emotion data is not available — R pipeline was not reachable when this analysis ran.";
-      const top = Object.entries(emo).sort((a, b) => b[1] - a[1])[0];
+      // Only consider the 6 displayed emotions — the R pipeline also returns
+      // trust/anticipation which are not shown in the panel
+      const DISPLAYED_EMOTIONS = ["happiness", "trust", "sadness", "anger", "surprise", "anticipation", "fear", "disgust"];
+      const top = Object.entries(emo)
+        .filter(([k]) => DISPLAYED_EMOTIONS.includes(k))
+        .sort((a, b) => b[1] - a[1])[0];
       const topLabel = top ? formatEmotion(top[0]) : "Joy";
       const topPct = top ? Math.round(top[1] * 100) : 0;
       return `${topLabel} dominates at ${topPct}%, reflecting the primary emotional register of the dataset. Secondary emotions provide nuance beyond simple polarity labels.`;

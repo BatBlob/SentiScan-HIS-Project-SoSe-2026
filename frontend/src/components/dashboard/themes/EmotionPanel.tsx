@@ -13,9 +13,11 @@ interface Props {
 
 const EMO_CONFIG = [
   { key: "happiness", label: "Joy", cls: "bar-joy", emoji: "😊", bg: "#fef9c3" },
+  { key: "trust", label: "Trust", cls: "bar-trust", emoji: "🤝", bg: "#d1fae5" },
   { key: "sadness", label: "Sadness", cls: "bar-sad", emoji: "😢", bg: "#dbeafe" },
   { key: "anger", label: "Anger", cls: "bar-ang", emoji: "😠", bg: "#fee2e2" },
-  { key: "surprise", label: "Surprise", cls: "bar-surp", emoji: "😲", bg: "#d1fae5" },
+  { key: "surprise", label: "Surprise", cls: "bar-surp", emoji: "😲", bg: "#e0f2fe" },
+  { key: "anticipation", label: "Anticipation", cls: "bar-antic", emoji: "🤩", bg: "#fce7f3" },
   { key: "fear", label: "Fear", cls: "bar-fear", emoji: "😨", bg: "#ede9fe" },
   { key: "disgust", label: "Disgust", cls: "bar-disg", emoji: "🤢", bg: "#ffedd5" },
 ];
