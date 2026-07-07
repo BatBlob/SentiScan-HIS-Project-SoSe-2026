@@ -397,6 +397,9 @@ def assemble_analysis_output(
             if a.get("term")
         ]
 
+        sarcasm_flag = bool(r_doc.get("sarcasm_flag", False)) if r_doc else False
+        sarcasm_confidence = float(r_doc.get("sarcasm_confidence", 0.0)) if r_doc else 0.0
+
         entries.append(
             EntryResult(
                 row_index=i,
@@ -404,8 +407,8 @@ def assemble_analysis_output(
                 polarity_confidence=ml_pred["polarity_confidence"],
                 emotions=per_doc_emotion,
                 intent=intent,
-                sarcasm_flag=False,
-                sarcasm_confidence=0.0,
+                sarcasm_flag=sarcasm_flag,
+                sarcasm_confidence=round(sarcasm_confidence, 4),
                 aspects=aspects,
                 topics=[],
             )
@@ -431,6 +434,8 @@ def assemble_analysis_output(
 
     temporal = _temporal_trend(rows, ml_predictions, timestamp_column)
 
+    sarcasm_count = sum(1 for e in entries if e.sarcasm_flag)
+
     aggregates = Aggregates(
         polarity_distribution=_polarity_distribution_from_ml(ml_predictions),
         emotion_distribution=emotion_distribution,
@@ -440,7 +445,7 @@ def assemble_analysis_output(
         keywords_negative=keywords_negative,
         topics=topics,
         temporal_trend=temporal,
-        sarcasm_count=0,
+        sarcasm_count=sarcasm_count,
         word_cloud=word_cloud,
         top_bigrams=top_bigrams,
     )

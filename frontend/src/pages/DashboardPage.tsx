@@ -23,7 +23,7 @@ import { TrendPanel } from "../components/dashboard/themes/TrendPanel";
 import { THEMES, themeLabel } from "../constants/themes";
 
 // Panels where the polarity filter actually changes visible entry-level content.
-const FILTERABLE_THEMES = new Set<ThemeId>(["finegrained", "confidence", "aspect", "intent"]);
+const FILTERABLE_THEMES = new Set<ThemeId>(["finegrained", "confidence", "aspect", "intent", "sarcasm"]);
 import { WordAnalysisPanel } from "../components/dashboard/themes/WordAnalysisPanel";
 import type {
   Aggregates,

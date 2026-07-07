@@ -194,6 +194,72 @@ compute_keyword_scores <- function(df, top_n = 15, min_support = 5) {
   )
 }
 
+# ---- Sarcasm detection (heuristic, no ML model required) ----
+# Four signals combined into a composite score:
+#   1. Sentiment incongruency  — sentimentr and Bing lexicon disagree in direction
+#   2. Punctuation density     — ratio of ! and ? in the raw text
+#   3. Positive words, negative tone — NRC positive words in a negative-scoring doc
+#   4. Sarcasm phrase lexicon  — hardcoded common sarcasm markers
+#
+# Threshold: score >= 0.35 => sarcasm_flag = TRUE
+compute_sarcasm <- function(df) {
+  sarcasm_phrases <- c(
+    "oh sure", "yeah right", "said no one", "just great", "oh great",
+    "totally fine", "as if", "oh wow", "big surprise", "oh really",
+    "great job", "way to go", "oh fantastic", "how wonderful",
+    "oh perfect", "nice going", "oh brilliant", "simply amazing",
+    "totally manageable", "absolutely love", "couldn't be better"
+  )
+
+  nrc_pos <- get_sentiments("nrc") %>%
+    filter(sentiment == "positive") %>%
+    pull(word) %>%
+    unique()
+
+  df %>%
+    mutate(
+      # Signal 1: direction disagreement between sentimentr and Bing
+      incongruency = if_else(
+        !is.na(sentimentr_score) & !is.na(bing_score) &
+          sign(sentimentr_score) != sign(bing_score) &
+          abs(sentimentr_score - bing_score) > 0.3,
+        1.0, 0.0
+      ),
+
+      # Signal 2: exclamation/question mark density (capped at 1)
+      raw_lower   = str_to_lower(raw_text),
+      punct_count = str_count(raw_text, "[!?]"),
+      punct_density = pmin(punct_count / pmax(word_count, 1), 1.0),
+
+      # Signal 3: positive NRC words present but sentimentr score is negative
+      pos_word_count = map_int(str_split(cleaned_text, "\\s+"),
+                               ~ sum(.x %in% nrc_pos)),
+      pos_in_neg = if_else(
+        pos_word_count >= 2 & !is.na(sentimentr_score) & sentimentr_score < -0.05,
+        1.0, 0.0
+      ),
+
+      # Signal 4: sarcasm phrase lexicon match
+      phrase_match = if_else(
+        map_lgl(raw_lower, ~ any(str_detect(.x, fixed(sarcasm_phrases)))),
+        1.0, 0.0
+      ),
+
+      # Composite score (weights sum to 1.0)
+      sarcasm_score = round(
+        0.40 * incongruency +
+        0.20 * punct_density +
+        0.20 * pos_in_neg +
+        0.20 * phrase_match,
+        4
+      ),
+
+      sarcasm_flag       = sarcasm_score >= 0.35,
+      sarcasm_confidence = round(pmin(sarcasm_score / 0.6, 1.0), 4)
+    ) %>%
+    select(doc_id, sarcasm_flag, sarcasm_confidence)
+}
+
 compute_topics <- function(df, k = 3) {
   corp  <- corpus(df, docid_field = "doc_id", text_field = "cleaned_text")
   toks  <- quanteda::tokens(corp, remove_punct = TRUE, remove_numbers = TRUE) %>%
@@ -222,6 +288,7 @@ run_analysis <- function(data) {
 
   doc_emotions   <- compute_doc_emotions(df)
   doc_confidence <- compute_confidence(df)
+  doc_sarcasm    <- compute_sarcasm(df)
 
   summary_out <- list(
     documents      = nrow(df),
@@ -255,17 +322,22 @@ run_analysis <- function(data) {
 
   # Per-document rows — this is what the Confidence Scoring table actually needs
   documents_out <- df %>%
-    left_join(doc_emotions, by = "doc_id") %>%
+    left_join(doc_emotions,   by = "doc_id") %>%
     left_join(doc_confidence, by = "doc_id") %>%
-    select(doc_id, raw_text, sentiment = polarity_class, emotion, confidence, confidence_flag) %>%
-    purrr::pmap(function(doc_id, raw_text, sentiment, emotion, confidence, confidence_flag) {
+    left_join(doc_sarcasm,    by = "doc_id") %>%
+    select(doc_id, raw_text, sentiment = polarity_class, emotion,
+           confidence, confidence_flag, sarcasm_flag, sarcasm_confidence) %>%
+    purrr::pmap(function(doc_id, raw_text, sentiment, emotion,
+                         confidence, confidence_flag, sarcasm_flag, sarcasm_confidence) {
       list(
-        doc_id     = doc_id,
-        text       = raw_text,
-        sentiment  = sentiment,
-        emotion    = emotion,
-        confidence = confidence,
-        flag       = confidence_flag
+        doc_id             = doc_id,
+        text               = raw_text,
+        sentiment          = sentiment,
+        emotion            = emotion,
+        confidence         = confidence,
+        flag               = confidence_flag,
+        sarcasm_flag       = isTRUE(sarcasm_flag),
+        sarcasm_confidence = as.numeric(sarcasm_confidence)
       )
     })
 
